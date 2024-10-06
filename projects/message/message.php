@@ -6,9 +6,8 @@
   $timestamp = date("Y-m-d H:i:s"); 
 
   // Format the message with timestamp
-  $formattedMessage = "[{$timestamp}] {$message}\n";
+  $formattedMessage = "[{$timestamp}] {$message}\n -------------------------------------\n";
 
-  $splitter = "-------------------------------------\n";
 
   // Specify the file path where you want to save the messages
   $filePath = 'messages.txt'; // You can change the filename if needed

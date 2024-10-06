@@ -1,38 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Send Message</title>
+  <title>Send a anonymous message</title>
+  <style>
+      body {
+          background-color: #2e2f2f;
+      }
+      .box h1 {           
+      color: #ff0a00;
+      }
+      .box p {
+          color: #fff;
+      }
+.box textarea {
+width: 100%;
+height: 150px;
+padding: 12px 20px;
+box-sizing: border-box;
+border:2px solid red;
+border-radius: 4px;
+background-color: #4f4f4f;
+color: #fff;
+font-size: 16px;
+resize: none;
+margin-bottom: 7px;
+}
+.box button {
+   float: right;
+   padding: 10px;
+   margin: 4px 2px;
+   margin-top: 60px;
+   border: none;
+   border-radius: 6px;
+   background-color:#ff0a00;
+   color: #ffffff;
+   font-size: 13px;
+}
+#messageResult {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.success {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.error {
+    background-color: #f44336; /* Red */
+    color: white;
+}
+  </style>
 </head>
 <body>
 
-  <form id="messageForm">
-    <label for="message">Message:</label><br>
-    <textarea id="message" name="message"></textarea><br><br>
-    <button type="submit">Send</button>
+  <form id="messageForm" class="box">
+
+      <h1>Send a anonymous message to Wolfplayz</h1>
+      <p>For those who remembered I have made a similar project like this before but the difference this one doesn't allow photo uploads. (for now)</p>
+      <textarea id="message" name="message"></textarea>
+      <button type="submit">Send message</button>
+    </div>
+    <div id="messageResult"></div> 
   </form> 
 
   <script>
     const form = document.getElementById('messageForm');
+    const messageResult = document.getElementById('messageResult');
+
     form.addEventListener('submit', (event) => {
-      event.preventDefault(); // Prevent default form submission
+      event.preventDefault(); 
 
       const message = document.getElementById('message').value;
 
-      // Send message data to message.php using AJAX
       const xhr = new XMLHttpRequest();
       xhr.open("POST", "message.php", true);
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
       xhr.onreadystatechange = function() {
-  if (this.readyState === XMLHttpRequest.DONE) {
-    if (this.status === 200) {
-      // ... (handle success) ...
-    } else {
-      // Display the error message from the PHP script in the console
-      console.error("PHP Error:", this.responseText); 
-      alert("Error sending message. See console for details.");
-    }
-  }
-};
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            // Success! Display the response from PHP
+            messageResult.textContent = this.responseText;
+            messageResult.className = 'success'; 
+            form.reset();
+          } else {
+            // Error! Display an error message
+            messageResult.textContent = "Error sending message: " + this.responseText;
+            messageResult.className = 'error'; 
+          }
+        }
+      };
       xhr.send("message=" + encodeURIComponent(message));
     });
   </script>
