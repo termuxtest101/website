@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Send an Anonymous Message</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+  <style>
+      body {
+          background-color: #2e2f2f;
+      }
+      .box h1 {           
+      color: #ff0a00;
+      font-family: 'Orbitron', sans-serif;
+      }
+      .box p {
+          color: #fff;
+          font-family: 'Orbitron', sans-serif;
+      }
+      .box textarea {
+          width: 100%;
+          height: 150px;
+          padding: 12px 20px;
+          box-sizing: border-box;
+          border: 2px solid red;
+          border-radius: 4px;
+          background-color: #4f4f4f;
+          color: #fff;
+          font-family: 'Orbitron', sans-serif;
+          font-size: 16px;
+          resize: none;
+          margin-bottom: 7px;
+      }
+      .box button {
+          float: right;
+          padding: 10px;
+          margin: 4px 2px;
+          margin-top: 60px;
+          border: none;
+          border-radius: 6px;
+          background-color: #ff0a00;
+          color: #ffffff;
+          font-family: 'Orbitron', sans-serif;
+          font-size: 13px;
+      }
+      #messageResult {
+          margin-top: 10px;
+          padding: 10px;
+          border-radius: 4px;
+          font-size: 16px;
+          font-family: 'Orbitron', sans-serif;
+      }
+      .success {
+          background-color: #4CAF50; /* Green */
+          color: white;
+      }
+      .error {
+          background-color: #f44336; /* Red */
+          color: white;
+      }
+  </style>
+</head>
+<body>
+
+  <form id="messageForm" class="box">
+      <h1>Send an Anonymous Message to Wolfplayz</h1>
+      <p>You're messages will be send to @wolfplayztheprotogen on telegram</p>
+      <textarea id="message" name="message" placeholder="Type your message here..."></textarea>
+      <button type="submit">Send Message</button>
+      <div id="messageResult"></div>
+  </form> 
+
+  <script>
+    const form = document.getElementById('messageForm');
+    const messageResult = document.getElementById('messageResult');
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const message = document.getElementById('message').value;
+
+      if (!message.trim()) {
+        messageResult.textContent = "Please enter a message.";
+        messageResult.className = 'error';
+        return;
+      }
+      
+      const botToken = '7875814481:AAGpG5IiaGh8mIaFr5tWwOB3TM9jr_kAlMg';
+      const chatId = '6450160172';
+      const telegramMessage = `Anonymous Message:\n${message}`;
+
+      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: telegramMessage
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          messageResult.textContent = "Message sent successfully!";
+          messageResult.className = 'success';
+          form.reset();
+        } else {
+          messageResult.textContent = "Failed to send message. Error: " + data.description;
+          messageResult.className = 'error';
+        }
+      })
+      .catch(error => {
+        messageResult.textContent = "An error occurred: " + error;
+        messageResult.className = 'error';
+      });
+    });
+  </script>
+
+</body>
+</html>

