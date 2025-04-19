@@ -12,6 +12,7 @@
 
   nav {
     background-color: #222;
+    font-family: 'Orbitron', sans-serif;
     padding: 1rem;
     position: relative;
   }
@@ -31,6 +32,7 @@
     display: none;
     font-size: 1.5rem;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .menu {
@@ -90,16 +92,17 @@
     transform: translateY(0);
   }
 
-  /* Remove underlines and visited styles */
-  a,
-  a:visited,
-  a:hover,
-  a:active {
+  a, a:visited, a:hover, a:active, a:focus, a * {
     text-decoration: none;
     color: white;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    user-select: none;
+    outline: none;
   }
+  
 
-  /* Responsive */
   @media (max-width: 768px) {
     .hamburger {
       display: block;
