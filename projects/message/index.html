@@ -3,16 +3,27 @@
 <head>
   <title>Send an Anonymous Message</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/navbar.css" type="text/css">
    <style>
-      body {
-          background-color: #2e2f2f;
-          font-family: 'Orbitron', sans-serif;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-      }
+ body {
+  background-color: #2e2f2f;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    flex-direction: column; /* ADD THIS */
+    align-items: center;
+    margin: 0;
+}
+.center-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px); /* Adjust height depending on navbar */
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+
       .box {
           background-color: #333;
           padding: 20px;
@@ -66,6 +77,9 @@
   </style>
 </head>
 <body>
+
+  <script src="/assets/navbar.js"></script>
+  <div class="center-wrapper">
   <form id="messageForm" class="box">
     <h1>Send an Anonymous Message to Wolfplayz</h1>
     <p>Feel free to share your message. You can also upload an image or GIF (optional).</p>
@@ -74,7 +88,7 @@
     <button type="submit">Send Message</button>
     <div id="messageResult"></div>
   </form>
-
+</div>
   <script>
     const form = document.getElementById('messageForm');
     const messageResult = document.getElementById('messageResult');

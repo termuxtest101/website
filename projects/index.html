@@ -19,6 +19,52 @@
       align-items: center;
       height: 10vh;
      }
+.message {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 0 auto;
+  height: 100%;
+  width: 500px;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #2e2e2e;
+}
+
+.message h2 {
+  font-family: 'Orbitron', sans-serif;
+  color: red;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.message a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  height: 100%;
+}
+.message img {
+  width: 400px;
+  height: auto;
+  border-radius: 10px;
+}
+@media (max-width: 768px) {
+  .message {
+    width: 90%;
+    padding: 10px;
+  }
+
+  .message img {
+    width: 90%;
+    height: auto;
+  }
+}
 </style>
 </head>
 <body>
@@ -48,8 +94,8 @@
 </div>
   <div class="message">
     <a href="message/index.html"><h2> Send me a message</h2></a>
-    <p>A simple project that send all message (with image if available) to a telegram chat. </p>
-    <img src="assets/Screenshot_20250419_122023.png" alt="Send message">
+    <a href="message/index.html"><p>A simple project that send all message (with image if available) to a telegram chat. </p></a>
+    <a href="message/index.html"><img src="assets/Screenshot_20250419_122023.png" alt="Send message"></div>
     </div>
 </div>
 </body>
