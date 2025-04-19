@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Responsive Navbar</title>
+  <link rel="stylesheet" href="assets/navbar.css" type="text/css">
+</head>
+<body>
+  <nav>
+    <div class="navbar">
+      <div class="logo"></div>
+      <div class="hamburger" id="hamburger">&#9776;</div>
+      <div class="menu" id="menu">
+        <div class="menu-item">
+          <a href="#">Home</a>
+          <a href="#">About</a>
+        </div>
+        <div class="menu-item" id="osMenu">
+          <a href="#">OS ▾</a>
+          <div class="dropdown">
+            <a href="#">Windows</a>
+            <a href="#">Linux</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const menu = document.getElementById('menu');
+    const osMenu = document.getElementById('osMenu');
+
+    hamburger.addEventListener('click', () => {
+      menu.classList.toggle('show');
+    });
+
+    osMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      osMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!osMenu.contains(e.target)) {
+        osMenu.classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>
+

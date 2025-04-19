@@ -1,0 +1,145 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #474546;
+    color: white;
+  }
+
+  nav {
+    background-color: #222;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .hamburger {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .menu {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .menu-item {
+    position: relative;
+  }
+
+  .menu-item a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+    border-radius: 4px;
+  }
+
+  .menu-item a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #333;
+    min-width: 150px;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    border-radius: 4px;
+    z-index: 100;
+  }
+
+  .dropdown a {
+    padding: 0.75rem 1rem;
+    color: white;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.3s ease;
+  }
+
+  .dropdown a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .menu-item.show .dropdown {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Remove underlines and visited styles */
+  a,
+  a:visited,
+  a:hover,
+  a:active {
+    text-decoration: none;
+    color: white;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hamburger {
+      display: block;
+    }
+
+    .menu {
+      flex-direction: column;
+      align-items: right;
+      gap: 0;
+      background-color: #222;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      width: 100%;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.4s ease, opacity 0.4s ease;
+    }
+    .menu a {
+  width: 100%;
+  padding: 1rem;
+}
+
+
+    .menu.show {
+      max-height: 400px;
+      opacity: 1;
+    }
+
+    .dropdown {
+      position: relative;
+      transform: none;
+      opacity: 1;
+      display: none;
+      background-color: #333;
+      margin-left: 1rem;
+    }
+
+    .menu-item.show .dropdown {
+      display: flex;
+    }
+  }
