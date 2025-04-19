@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wolfplayz Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/navbar.css" type="text/css">
+<style>
+    body{
+        font-family: 'Orbitron', sans-serif;
+    }
+     .projects {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 10vh;
+     }
+.message {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 0 auto;
+  height: 100%;
+  width: 500px;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #2e2e2e;
+}
+
+.message h2 {
+  font-family: 'Orbitron', sans-serif;
+  color: red;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.message a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  height: 100%;
+}
+.message img {
+  width: 400px;
+  height: auto;
+  border-radius: 10px;
+}
+@media (max-width: 768px) {
+  .message {
+    width: 90%;
+    padding: 10px;
+  }
+
+  .message img {
+    width: 90%;
+    height: auto;
+  }
+}
+</style>
+</head>
+<body>
+  <nav>
+    <div class="navbar">
+      <div class="logo"></div>
+      <div class="hamburger" id="hamburger">&#9776;</div>
+      <div class="menu" id="menu">
+        <div class="menu-item">
+          <a href="https://wolfplayz.top">Home</a>
+          <a href="https://wolfplayz.top/projects">Projects</a>
+        </div>
+        <div class="menu-item" id="osMenu">
+          <a href="#">Guides ▾</a>
+          <div class="dropdown">
+            <a href="https://wolfplayz.top/guide/windows">Windows</a>
+            <a href="https://wolfplayz.top/guide/linux">Linux</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <script src="/assets/navbar.js"></script>
+
+<div class="projects">
+  <h1>Wolfplayz Projects</h1>
+</div>
+  <div class="message">
+    <a href="message/index.html"><h2> Send me a message</h2></a>
+    <a href="message/index.html"><p>A simple project that send all message (with image if available) to a telegram chat. </p></a>
+    <a href="message/index.html"><img src="assets/Screenshot_20250419_122023.png" alt="Send message"></div>
+    </div>
+</div>
+</body>
+</html>
+
