@@ -23,7 +23,11 @@
     align-items: center;
   }
 
-  .logo {
+  .logoimg {
+    height: 50px;
+    width: auto;
+  }
+  .logoimg {
     font-size: 1.5rem;
     font-weight: bold;
   }
