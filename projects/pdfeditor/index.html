@@ -2,100 +2,304 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PDF Editor – GDrive Sync</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.2/dist/signature_pad.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/idb-keyval.iife.min.js"></script>
-  <script src="https://apis.google.com/js/api.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Client-side PDF Editor</title>
   <style>
-    html{font-family:Roboto,Helvetica,Arial,sans-serif}
-    canvas{touch-action:none}
-    #viewer{touch-action:pan-x pan-y}
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    #toolbar {
+      background: #222;
+      color: #fff;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      overflow-x: auto;
+    }
+    #toolbar input,
+    #toolbar select,
+    #toolbar button {
+      font-size: 14px;
+      padding: 5px;
+    }
+    #pdf-container {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      background: #ccc;
+    }
+    #editor {
+      position: relative;
+      display: inline-block;
+    }
+    canvas {
+      display: block;
+      background: #fff;
+    }
+    .draggable {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      overflow: visible;
+    }
+    .text-box {
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-width: 40px;
+      min-height: 20px;
+      background: transparent;
+    }
+    .selected {
+      outline: 2px dashed red;
+    }
+    img.draggable {
+      resize: both;
+      overflow: auto;
+    }
+    @media (max-width: 600px) {
+      #toolbar {
+        flex-direction: column;
+      }
+      #toolbar input,
+      #toolbar select,
+      #toolbar button {
+        width: 100%;
+      }
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-<div class="p-4 space-y-2">
-  <div class="flex justify-between items-center">
-    <h1 class="text-xl font-bold">📄 PDF Editor – Google Drive Sync</h1>
-    <button id="gSign" class="px-3 py-1 bg-red-500 text-white rounded">Sign&nbsp;Google</button>
+<body>
+  <div id="toolbar">
+    <input type="file" id="pdf-upload" accept="application/pdf">
+    <button onclick="prevPage()">Prev</button>
+    <button onclick="nextPage()">Next</button>
+    <select id="font-family">
+      <option value="Arial">Arial</option>
+      <option value="Courier New">Courier</option>
+      <option value="Times New Roman">Times</option>
+    </select>
+    <input type="number" id="font-size" value="16" style="width:60px">
+    <input type="color" id="text-color" value="#000000">
+    <label><input type="checkbox" id="bold"> Bold</label>
+    <label><input type="checkbox" id="underline"> Underline</label>
+    <button onclick="addText()">Add Text</button>
+    <input type="file" id="img-upload">
+    <button onclick="deleteSelected()">Delete</button>
+    <button onclick="undo()">Undo</button>
+    <button onclick="redo()">Redo</button>
+    <button onclick="savePDF()">Save PDF</button>
+    <button onclick="clearAll()">Clear All</button>
   </div>
-
-  <div class="flex flex-wrap gap-2 mb-2">
-    <button id="importDrv" class="px-3 py-2 bg-blue-600 text-white rounded">📂 Import&nbsp;Drive</button>
-    <button id="exportDrv" class="px-3 py-2 bg-green-600 text-white rounded">💾 Export&nbsp;Drive</button>
-    <button id="chooseBtn" class="px-3 py-2 bg-gray-300 rounded">📄 Local&nbsp;PDF</button>
-    <input id="fileInput" type="file" accept="application/pdf" class="hidden" />
+  <div id="pdf-container">
+    <div id="editor">
+      <canvas id="pdf-canvas"></canvas>
+    </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const { jsPDF } = window.jspdf;
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const editor = document.getElementById('editor');
+    let pdfDoc = null, currentPage = 1, scale = 1.5;
+    let elements = JSON.parse(localStorage.getItem("pdf-edits") || "[]");
+    let selectedEl = null, history = [JSON.parse(JSON.stringify(elements))], undoStack = [];
 
-  <!-- Viewer -->
-  <div id="viewer" class="relative w-full h-[80vh] flex justify-center bg-white shadow rounded overflow-auto">
-    <canvas id="pdfCanvas"></canvas>
-    <canvas id="overlayCanvas" class="absolute inset-0"></canvas>
-  </div>
-</div>
+    function renderPage(num) {
+      pdfDoc.getPage(num).then(page => {
+        const viewport = page.getViewport({ scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        page.render({ canvasContext: ctx, viewport }).promise.then(drawElements);
+      });
+    }
 
-<script>
-/* ================= GOOGLE DRIVE AUTH ================= */
-const CLIENT_ID = '231781629245-dr7b48ufcp67um90ip7g56d571skesp5.apps.googleusercontent.com'; // <-- replace
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-let gAuth;
-function initGoogle(){
-  gapi.load('client:auth2',async()=>{
-    await gapi.client.init({clientId:CLIENT_ID,scope:SCOPES});
-    gAuth=gapi.auth2.getAuthInstance();
-    if(gAuth.isSignedIn.get()) document.getElementById('gSign').classList.add('bg-green-500');
-  });
-}
-window.addEventListener('load',initGoogle);
-$('gSign').onclick=async()=>{try{await gAuth.signIn();alert('Google Connected');$('gSign').classList.add('bg-green-500');}catch(e){console.error(e);}};
-function token(){return gAuth?.currentUser.get().getAuthResponse().access_token;}
+    function prevPage() {
+      if (currentPage > 1) currentPage--;
+      renderPage(currentPage);
+    }
+    function nextPage() {
+      if (currentPage < pdfDoc.numPages) currentPage++;
+      renderPage(currentPage);
+    }
 
-/* ================= BASIC EDITOR STATE (simplified) ================= */
-const pdfCanvas=$('pdfCanvas'),overlay=$('overlayCanvas'),ctxO=overlay.getContext('2d');
-let original=null,pdfDoc=null,page=1,pages=0,scale=1.0,currentFilename='';
-const annotations=[]; // bare-min for demo
-/* ---- helpers ---- */
-function $(id){return document.getElementById(id);}const buf2b64=b=>btoa(String.fromCharCode(...new Uint8Array(b)));const b642buf=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0)).buffer;
+    document.getElementById('pdf-upload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const typedarray = new Uint8Array(ev.target.result);
+        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+          pdfDoc = pdf;
+          currentPage = 1;
+          renderPage(currentPage);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    });
 
-/* ==================== LOAD LOCAL PDF ==================== */
-$('chooseBtn').onclick=()=>$('fileInput').click();
-$('fileInput').onchange=e=>e.target.files[0]&&loadArrayBuffer(e.target.files[0].arrayBuffer(), e.target.files[0].name);
-async function loadArrayBuffer(promise, name='') { original = await promise; currentFilename = name;pdfDoc=await pdfjsLib.getDocument({data:original}).promise;pages=pdfDoc.numPages;page=1;render();}
+    function drawElements() {
+      document.querySelectorAll('.draggable').forEach(e => e.remove());
+      elements.forEach((el, i) => {
+        if (el.page !== currentPage) return;
+        let node = el.type === 'text' ? document.createElement('div') : document.createElement('img');
+        node.className = 'draggable' + (el.type === 'text' ? ' text-box' : '');
+        node.style.left = el.x + 'px';
+        node.style.top = el.y + 'px';
+        node.style.width = el.width + 'px';
+        node.style.height = el.height + 'px';
+        if (el.type === 'text') {
+          node.contentEditable = true;
+          node.innerText = el.content;
+          node.style.fontSize = el.size + 'px';
+          node.style.color = el.color;
+          node.style.fontFamily = el.font;
+          node.style.fontWeight = el.bold ? 'bold' : 'normal';
+          node.style.textDecoration = el.underline ? 'underline' : 'none';
+          node.oninput = () => { el.content = node.innerText; save(); };
+        } else {
+          node.src = el.src;
+        }
+        node.onclick = () => {
+          document.querySelectorAll('.selected').forEach(e => e.classList.remove('selected'));
+          node.classList.add('selected');
+          selectedEl = el;
+        };
+        makeDraggable(node, el);
+        editor.appendChild(node);
+      });
+    }
 
-/* ==================== RENDER ==================== */
-async function render(){if(!pdfDoc)return;const p=await pdfDoc.getPage(page);const vp=p.getViewport({scale});pdfCanvas.width=vp.width;pdfCanvas.height=vp.height;overlay.width=vp.width;overlay.height=vp.height;await p.render({canvasContext:pdfCanvas.getContext('2d'),viewport:vp}).promise;ctxO.clearRect(0,0,overlay.width,overlay.height);} // no annotations for brevity
+    function makeDraggable(el, obj) {
+      el.onpointerdown = e => {
+        const offsetX = e.clientX - el.offsetLeft;
+        const offsetY = e.clientY - el.offsetTop;
+        el.setPointerCapture(e.pointerId);
+        el.onpointermove = ev => {
+          el.style.left = (obj.x = ev.clientX - offsetX) + 'px';
+          el.style.top = (obj.y = ev.clientY - offsetY) + 'px';
+        };
+        el.onpointerup = () => {
+          el.onpointermove = null;
+          el.onpointerup = null;
+          obj.width = el.offsetWidth;
+          obj.height = el.offsetHeight;
+          save();
+        };
+      };
+    }
 
-/* ==================== GOOGLE DRIVE IMPORT ==================== */
-$('importDrv').onclick=async()=>{
- if(!gAuth||!gAuth.isSignedIn.get())return alert('Sign in first');
- const list=await gapi.client.drive.files.list({q:"mimeType='application/pdf' and trashed=false",pageSize:20,fields:'files(id,name)'});
- const files=list.result.files;if(!files.length)return alert('No PDFs found');
- const choice=prompt('Enter number to import:\n'+files.map((f,i)=>`${i+1}. ${f.name}`).join('\n'));
- const idx=parseInt(choice)-1;if(idx<0||idx>=files.length)return;
- const id=files[idx].id;const res=await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`,{headers:{Authorization:'Bearer '+token()}});const buf=await res.arrayBuffer();loadArrayBuffer(Promise.resolve(buf), files[idx].name);};
+    function addText() {
+      const font = document.getElementById('font-family').value;
+      const size = +document.getElementById('font-size').value;
+      const color = document.getElementById('text-color').value;
+      const bold = document.getElementById('bold').checked;
+      const underline = document.getElementById('underline').checked;
+      const content = prompt("Enter text:");
+      if (!content) return;
+      const el = { type: 'text', content, x: 50, y: 50, width: 100, height: size + 10, font, size, color, bold, underline, page: currentPage };
+      elements.push(el);
+      history.push(JSON.parse(JSON.stringify(elements)));
+      drawElements();
+      save();
+    }
 
-/* ==================== GOOGLE DRIVE EXPORT ==================== */
-$('exportDrv').onclick=async()=>{
- if(!original)return alert('No PDF loaded');
- if(!gAuth||!gAuth.isSignedIn.get())return alert('Sign in first');
- const blob=new Blob([original],{type:'application/pdf'});
- await uploadNew(blob, currentFilename || 'Edited-PDF.pdf');
-};
-async function uploadNew(blob,name){const meta={name,mimeType:'application/pdf'};const boundary='-------314159';const deli=`\r\n--${boundary}\r\n`;const close=`\r\n--${boundary}--`;const reader=new FileReader();reader.onload=async()=>{
- const body=deli+'Content-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+deli+'Content-Type: application/pdf\r\n\r\n'+reader.result+close;
- await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'multipart/related; boundary='+boundary},body});alert('Uploaded');};reader.readAsBinaryString(blob);}  
+    document.getElementById("img-upload").addEventListener("change", e => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const el = { type: 'img', src: reader.result, x: 50, y: 50, width: 100, height: 100, page: currentPage };
+        elements.push(el);
+        drawElements();
+        save();
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
 
-/* ==================== AUTOSAVE WIP TO DRIVE ==================== */
-async function syncWIP(bytes){if(!gAuth||!gAuth.isSignedIn.get())return;const idKey='wipFileId';let fid=localStorage.getItem(idKey);const blob=new Blob([bytes],{type:'application/pdf'});
- if(!fid){fid=await uploadNewReturnId(blob,'PDF-Editor-WIP.pdf');localStorage.setItem(idKey,fid);}else{await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media`,{method:'PATCH',headers:{'Authorization':'Bearer '+token(),'Content-Type':'application/pdf'},body:blob});}}
-async function uploadNewReturnId(blob,name){const meta={name,mimeType:'application/pdf'};const boundary='-------314159';const deli=`\r\n--${boundary}\r\n`;const close=`\r\n--${boundary}--`;return new Promise(res=>{const r=new FileReader();r.onload=async()=>{const body=deli+'Content-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+deli+'Content-Type: application/pdf\r\n\r\n'+r.result+close;const resp=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Authorization':'Bearer '+token(),'Content-Type':'multipart/related; boundary='+boundary},body});const j=await resp.json();res(j.id);};r.readAsBinaryString(blob);});}
+    function deleteSelected() {
+      if (!selectedEl) return;
+      elements = elements.filter(el => el !== selectedEl);
+      selectedEl = null;
+      drawElements();
+      save();
+    }
 
-</script>
+    function undo() {
+      if (history.length <= 1) return;
+      undoStack.push(history.pop());
+      elements = JSON.parse(JSON.stringify(history[history.length - 1]));
+      drawElements();
+    }
+
+    function redo() {
+      if (!undoStack.length) return;
+      const state = undoStack.pop();
+      history.push(JSON.parse(JSON.stringify(state)));
+      elements = JSON.parse(JSON.stringify(state));
+      drawElements();
+    }
+
+    function savePDF() {
+      const pdf = new jsPDF({ unit: 'px', format: 'a4' });
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+      const promises = [];
+
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        promises.push(pdfDoc.getPage(i).then(page => {
+          const viewport = page.getViewport({ scale });
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = viewport.width;
+          tempCanvas.height = viewport.height;
+          const tempCtx = tempCanvas.getContext('2d');
+
+          return page.render({ canvasContext: tempCtx, viewport }).promise.then(() => {
+            if (i > 1) pdf.addPage();
+            const img = tempCanvas.toDataURL('image/jpeg', 1.0);
+            pdf.addImage(img, 'JPEG', 0, 0, width, height);
+            elements.filter(el => el.page === i).forEach(el => {
+              if (el.type === 'text') {
+                pdf.setTextColor(el.color);
+                pdf.setFont(el.font);
+                if (el.bold) pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(el.size);
+                pdf.text(el.content, el.x * width / canvas.width, (el.y + el.size) * height / canvas.height);
+              } else if (el.type === 'img') {
+                pdf.addImage(el.src, 'JPEG', el.x * width / canvas.width, el.y * height / canvas.height, el.width * width / canvas.width, el.height * height / canvas.height);
+              }
+            });
+          });
+        }));
+      }
+
+      Promise.all(promises).then(() => pdf.save("edited.pdf"));
+    }
+
+    function clearAll() {
+      elements = [];
+      selectedEl = null;
+      history = [[]];
+      undoStack = [];
+      localStorage.removeItem("pdf-edits");
+      drawElements();
+    }
+
+    function save() {
+      localStorage.setItem("pdf-edits", JSON.stringify(elements));
+    }
+  </script>
 </body>
 </html>
